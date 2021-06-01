@@ -1,0 +1,17 @@
+<html>
+    <head>
+        <meta charset="UTF-8"/>
+    </head>
+
+    <body>
+        {{range .}}
+            <p>姓名: {{.Name}}</p>
+            <p>学校: {{.School}}</p>
+            <p>兴趣: </p>
+            {{range .Hobbies}}
+                <p>     {{.}}</p>
+            {{end}}
+            <br>
+        {{end}}
+    </body>
+</html>

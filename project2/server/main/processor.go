@@ -27,6 +27,15 @@ func (this *Processor) serverProcessMsg(msg *message.Message) (err error) {
 
 	case message.RegisterMsgType:
 
+		up := &process.UserProcess{
+			Conn: this.Conn,
+		}
+		err = up.ServerProcessRegister(msg)
+
+	case message.SmsMsgType:
+		smsProcess := &process.SmsProcess{}
+		smsProcess.SendGroupMsg(msg)
+
 	default:
 
 		fmt.Println("消息类型不存在, 无法处理!")
@@ -44,7 +53,6 @@ func (this *Processor) process2() error {
 		msg, err := tf.ReadPkg()
 
 		if err != nil {
-
 			if err == io.EOF {
 
 				fmt.Println("正常退出")

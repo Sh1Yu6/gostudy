@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/gomodule/redigo/redis"
+	"github.com/gostudy/project2/common/message"
 )
 
 type UserDao struct {
@@ -50,7 +51,32 @@ func (this *UserDao) Login(userId string, userPwd string) (user *User, err error
 	}
 
 	if user.UserPwd != userPwd {
-
+		err = ErrorUserPwd
+		return
 	}
 	return
+}
+
+func (this *UserDao) Register(user *message.User) (err error) {
+	conn := this.pool.Get()
+	defer conn.Close()
+
+	_, err = this.getUserById(conn, user.UserId)
+	if err == nil {
+		err = ErrorUserExitsts
+		return
+	}
+
+	data, err := json.Marshal(user)
+	if err != nil {
+		return
+	}
+
+	_, err = conn.Do("hset", "users", user.UserId, data)
+	if err != nil {
+		fmt.Println("conn error: ", err)
+		return
+	}
+	return
+
 }

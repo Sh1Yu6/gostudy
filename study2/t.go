@@ -23,6 +23,7 @@ func main() {
 	s1 := []int{1, 2, 3, 4}
 
 	copy(s, s1)
+	fmt.Println(s)
 	s = append(s, 1, 2, 3, 4, 5)
 	fmt.Println(s)
 }

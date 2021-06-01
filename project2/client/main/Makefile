@@ -1,10 +1,10 @@
 src = $(wildcard *.go)
 
-server: $(src)
+client: $(src)
 	go build -o $@ $^
 
 .PHONY:
 	clean
 
 clean:
-	rm server
+	rm client

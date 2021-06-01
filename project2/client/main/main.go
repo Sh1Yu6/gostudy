@@ -14,7 +14,7 @@ func main() {
 
 func start() {
 	var key int
-
+	key = 9999
 	for {
 		utils.CallClear()
 		fmt.Println("----------------聊天系统---------------")
@@ -30,7 +30,8 @@ func start() {
 			login.Login()
 			utils.WaitInput()
 		case 2:
-			//register()
+			register := &process.UserProcess{}
+			register.Register()
 			utils.WaitInput()
 		case 0:
 			fmt.Println("退出")
