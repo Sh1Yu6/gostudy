@@ -82,8 +82,8 @@
     var username = document.getElementById('username');
     var password = document.getElementById('password');
     $.ajax({
-      <!--url: "/user/signup",-->
-      url: "/file/signup",
+      url: "/user/signup",
+      <!--url: "/file/signup",-->
       type: "POST",
       data: {
         "username": username.value,

@@ -10,11 +10,13 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gostudy/project4/db"
 	"github.com/gostudy/project4/meta"
 	"github.com/gostudy/project4/util"
 )
 
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
+
 	if r.Method == "GET" {
 
 		data, err := ioutil.ReadFile("./static/view/index.html")
@@ -70,7 +72,16 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		//meta.UpdateFileMeta(fileMeta)
 		meta.UpdateFileMetaDB(fileMeta)
 
-		http.Redirect(w, r, "/file/upload/suc", http.StatusFound)
+		r.ParseForm()
+		username := r.Form.Get("username")
+		suc := db.OnUserFileUploadFinished(username, fileMeta.FileSha1,
+			fileMeta.FileName, fileMeta.FileSize)
+		if suc {
+			http.Redirect(w, r, "/file/upload/suc", http.StatusFound)
+		} else {
+			w.Write([]byte("Upload Failed"))
+		}
+
 	}
 }
 
@@ -103,9 +114,16 @@ func FileQueryHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	limitCnt, _ := strconv.Atoi(r.Form.Get("limit"))
+	username := r.Form.Get("username")
 
-	fileMetas := meta.GetLastFileMetas(limitCnt)
-	data, err := json.Marshal(fileMetas)
+	//fileMetas := meta.GetLastFileMetas(limitCnt)
+	userFiles, err := db.QueryUserFileMetas(username, limitCnt)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	data, err := json.Marshal(userFiles)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -192,4 +210,48 @@ func FileDeleteHanler(w http.ResponseWriter, r *http.Request) {
 	meta.RemoveFileMeta(filehash)
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func TryFastUploadHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+
+	username := r.Form.Get("username")
+	filehash := r.Form.Get("filehash")
+	filename := r.Form.Get("filename")
+	filesize, _ := strconv.Atoi(r.Form.Get("filesize"))
+
+	fileMeta, err := meta.GetFileMetaDB(filehash)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if fileMeta.FileName == "" {
+		resp := util.RespMsg{
+			Code: -1,
+			Msg:  "秒传失败, 请访问普通上传接口",
+		}
+		w.Write(resp.JSONBytes())
+		return
+	}
+
+	suc := db.OnUserFileUploadFinished(username, filehash, filename,
+		int64(filesize))
+	if suc {
+		resp := util.RespMsg{
+			Code: 0,
+			Msg:  "秒传成功",
+		}
+		w.Write(resp.JSONBytes())
+		return
+	} else {
+		resp := util.RespMsg{
+			Code: -2,
+			Msg:  "秒传失败, 请稍后重试",
+		}
+		w.Write(resp.JSONBytes())
+		return
+	}
+
 }
